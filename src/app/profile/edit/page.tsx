@@ -3,6 +3,7 @@
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { CURRENT_USER } from "@/lib/mock-data";
+import { showSuccessToast } from "@/lib/toast";
 
 export default function EditProfilePage() {
   const router = useRouter();
@@ -29,15 +30,19 @@ export default function EditProfilePage() {
     e.preventDefault();
     setLoading(true);
 
-    // TODO: Replace the URL below with your real backend endpoint.
-    // Also pass `avatarUrl` from UploadThing once you integrate file uploads.
-    // Example: fetch("https://your-api.com/profile", { method: "POST", ... })
-    await fetch("/api/profile", {
+    // TODO: Also pass `avatarUrl` from UploadThing once you integrate file uploads.
+    const res = await fetch("/api/profile", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ name, bio, website }),
     });
 
+    if (!res.ok) {
+      setLoading(false);
+      return;
+    }
+
+    showSuccessToast("Usuario actualizado con éxito");
     setSaved(true);
     setLoading(false);
     setTimeout(() => {
