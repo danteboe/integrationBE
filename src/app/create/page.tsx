@@ -2,6 +2,7 @@
 
 import { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
+import { showSuccessToast } from "@/lib/toast";
 
 type Tab = "post" | "reel";
 
@@ -40,22 +41,30 @@ export default function CreatePage() {
     try {
       if (tab === "post") {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
-        // TODO: Change the URL below to your real backend endpoint.
-        // Example: fetch("https://your-api.com/posts", { method: "POST", ... })
-        await fetch("/api/posts", {
+        const res = await fetch("/api/posts", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ imageUrl: preview, caption, location }),
         });
+
+        if (!res.ok) {
+          throw new Error("No se pudo crear el post");
+        }
+
+        showSuccessToast("Post creado con éxito");
       } else {
         // TODO: Replace `preview` with the real URL returned by UploadThing after upload.
-        // TODO: Change the URL below to your real backend endpoint.
-        // Example: fetch("https://your-api.com/reels", { method: "POST", ... })
-        await fetch("/api/reels", {
+        const res = await fetch("/api/reels", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ videoUrl: preview, thumbnailUrl: preview, caption, audioTrack }),
         });
+
+        if (!res.ok) {
+          throw new Error("No se pudo crear el reel");
+        }
+
+        showSuccessToast("Reel creado con éxito");
       }
 
       router.push("/");

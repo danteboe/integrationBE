@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { Conversation, DirectMessage } from "@/lib/types";
 import { CURRENT_USER } from "@/lib/mock-data";
 import { formatDistanceToNow } from "@/lib/utils";
+import { showSuccessToast } from "@/lib/toast";
 
 interface Props {
   initialConversation: Conversation;
@@ -22,12 +23,13 @@ export default function MessageThread({ initialConversation }: Props) {
   async function handleSend(e: React.FormEvent) {
     e.preventDefault();
     if (!text.trim() || sending) return;
+    const trimmedText = text.trim();
 
     // Optimistic update — add message locally right away
     const optimistic: DirectMessage = {
       id: `msg_optimistic_${Date.now()}`,
       senderId: CURRENT_USER.id,
-      text: text.trim(),
+      text: trimmedText,
       createdAt: new Date().toISOString(),
       isRead: false,
     };
@@ -35,10 +37,27 @@ export default function MessageThread({ initialConversation }: Props) {
     setText("");
     setSending(true);
 
-    // TODO: Change the URL below to your real backend endpoint.
-    // Example: fetch("https://your-api.com/messages", { method: "POST", ... })
+    try {
+      const res = await fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          conversationId: initialConversation.id,
+          text: trimmedText,
+        }),
+      });
 
-    setSending(false);
+      if (!res.ok) {
+        throw new Error("Failed to send message");
+      }
+
+      showSuccessToast("Message creado con éxito");
+    } catch {
+      setMessages((prev) => prev.filter((message) => message.id !== optimistic.id));
+      setText(trimmedText);
+    } finally {
+      setSending(false);
+    }
   }
 
   return (
